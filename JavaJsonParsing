@@ -1,0 +1,579 @@
+package bddrunners;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MultiHashMap;
+import org.json.JSONException;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+public class JsonParser {
+
+	static String k="extracted_text";
+	static FileWriter fw=null;
+	static String keyStr=null;
+	static Object keyvalue=null;
+
+
+	public static void main(String args[]) throws FileNotFoundException, IOException, ParseException
+	{
+
+		/*String filename= "/home/user/Desktop/elements.txt";
+
+		//String filename1= "/home/user/Desktop/test1.txt";
+
+		fw = new FileWriter(filename); //the true will append the new data
+
+		Object obj = new JSONParser().parse(new FileReader("/home/user/Desktop/elements_test.json"));
+
+		//Object obj1 = new JSONParser().parse(new FileReader("/home/user/Desktop/test1.json"));
+
+		if (obj instanceof JSONObject)
+		{
+			printJsonObject((JSONObject)obj);
+		}else if(obj instanceof JSONArray)
+		{
+			printJsonArray((JSONArray)obj);
+		}*/
+
+		String filename3= "/home/user/Desktop/report.txt";
+
+		fw = new FileWriter(filename3); //the true will append the new data
+
+
+		MultiHashMap str=readerInstructor("/home/user/Desktop/elements1.txt");
+
+
+		Set set1 = str.entrySet(); 
+		Iterator l = set1.iterator();
+		while(l.hasNext()) { 
+			Map.Entry me = (Map.Entry)l.next(); 
+			List list1=(List)str.get(me.getKey()); 
+
+			for(int j=0;j<list1.size();j++) 
+			{ 
+				System.out.println("key :"+me.getKey()+": value :"+list1.get(j)); 
+			} 
+		} 
+
+		MultiHashMap str2=readerInstructor("/home/user/Desktop/elements.txt");
+
+		Set set2 = str2.entrySet(); 
+		Iterator o = set2.iterator(); 
+		while(o.hasNext()) { 
+			Map.Entry me1 = (Map.Entry)o.next(); 
+			List list2=(List)str2.get(me1.getKey()); 
+
+			for(int j=0;j<list2.size();j++) 
+			{ 
+				System.out.println("key "+me1.getKey()+": value :"+list2.get(j)); 
+			} 
+		} 
+
+
+		List<String> beforeList = getAllKeys(str);
+		List<String> afterList = getAllKeys(str2);
+
+		List<String> commonList1 = beforeList;
+		List<String> commonList2 = afterList;
+
+		List<String> diffList1 = getAllKeys(str);
+		List<String> diffList2 = getAllKeys(str2);
+
+		commonList1.retainAll(afterList);
+		commonList2.retainAll(beforeList);
+
+		diffList1.removeAll(commonList1);
+		diffList2.removeAll(commonList2);
+
+		if(commonList1!=null & commonList2!=null) // athough both the size are same
+		{
+			for (int i = 0; i < commonList1.size(); i++) 
+			{
+			
+				
+				System.out.println(str.get(commonList1.get(i)));
+				System.out.println(str2.get(commonList1.get(i)));
+				
+				String temp=commonList1.get(i);
+				System.out.println(commonList1.get(i));
+				
+				if ((str.get(commonList1.get(i))).equals(str2.get(commonList1.get(i)))) 
+				{
+
+					temp=commonList1.get(i);
+					System.out.println(commonList1.get(i));
+
+					if((temp.contains("type")) || (temp.contains("text")) || (temp.contains("label")))
+					{
+						List list1=(List)str.get(commonList1.get(i)); 
+						List list2=(List)str2.get(commonList1.get(i));
+
+						for(int j=0;j<list1.size();j++) 
+						{ 
+
+							try
+							{
+								fw.write("Golden data set : key-" +beforeList.get(i)+", value- "+ list1.get(j)+" == UI data set : key-"+afterList.get(i)+", value -"+list2.get(j)+"\n");//appends the string to the file
+
+							}
+							catch(IOException ioe)
+							{
+								System.err.println("IOException: " + ioe.getMessage());
+							}
+							System.out.println("Golden data set : key-" +beforeList.get(i)+", value- "+ list1.get(j)+" == UI data set : key-"+afterList.get(i)+", value -"+list2.get(j));
+						}}
+					else
+					{
+						System.out.println("Skip");
+					}
+
+				}else
+				{
+					if(commonList1.get(i).contains("type") || commonList1.get(i).contains("text") || commonList1.get(i).contains("label"))
+					{
+					
+					List list1=(List)str.get(commonList1.get(i)); 
+					List list2=(List)str2.get(commonList1.get(i));
+
+					for(int j=0;j<list1.size();j++) 
+					{ 
+
+						try
+						{
+							fw.write("Golden data set : key-" +beforeList.get(i)+", value- "+ list1.get(j)+" != UI data set : key-"+afterList.get(i)+", value -"+list2.get(j)+"\n");//appends the string to the file
+
+						}
+						catch(IOException ioe)
+						{
+							System.err.println("IOException: " + ioe.getMessage());
+						}
+						System.out.println("Golden data set : key-" +beforeList.get(i)+", value- "+ list1.get(j)+" != UI data set : key-"+afterList.get(i)+", value -"+list2.get(j));
+					}
+				}else
+				{
+					System.out.println("Skip");
+				}
+			}
+		}
+	}
+
+
+
+	if (CollectionUtils.isNotEmpty(diffList1)) 
+	{
+		for (int i = 0; i < diffList1.size(); i++) 
+		{
+
+			System.out.println("Golden data set : key-" +beforeList.get(i)+", value- "+ str.get(diffList1.get(i)));
+			//System.out.println("Values present only in before map: "+str.get(diffList1.get(i)));
+		}
+	}
+	if (CollectionUtils.isNotEmpty(diffList2)) 
+	{
+		for (int i = 0; i < diffList2.size(); i++) 
+		{
+			System.out.println("UI data set : key-" +beforeList.get(i)+", value- "+ str2.get(diffList2.get(i)));
+			//System.out.println("Values present only in after map: "+str2.get(diffList2.get(i)));
+		}
+
+	}
+	fw.flush();
+}
+
+
+
+/**getAllKeys API adds the keys of the map to a list */
+public static List<String> getAllKeys(MultiHashMap map1)
+{
+	ArrayList<String> list1=new ArrayList<>();
+	Set set2 = map1.entrySet(); 
+	Iterator o = set2.iterator(); 
+	while(o.hasNext()) { 
+
+		Map.Entry me1 = (Map.Entry)o.next(); 
+		String s=(String) me1.getKey();
+		list1.add(s);
+
+	}
+	return list1; 
+}
+
+/*	Json path expression
+		//Works fine
+		String extractedText = JsonPath.parse(jo).read("$.data.sections[2].elements[1].extracted_text");
+		System.out.println(extractedText);
+		JSONArray jarr32=JsonPath.parse(jo).read("$.data.sections[*]");
+		System.out.println(jarr32.size());*/
+
+
+public static void printJsonObject(JSONObject jsObj) throws IOException
+{
+
+	for (Object key : jsObj.keySet()) {
+
+
+
+		if(!(key.equals("config") || key.equals("review_state") || key.equals("volume") || key.equals("status")||key.equals("msg") ||key.equals("process_status")))
+		{
+
+
+
+			//based on you key types
+			String  keyStr = (String)key;
+			Object keyvalue = jsObj.get(keyStr);
+
+			//Print key and value
+			System.out.println(keyStr + " : " + keyvalue);
+			/*if (keyStr.equals(k)) {
+				System.out.println("***********************************************"+jsObj.get(key));
+				break;
+			}*/
+
+			if (!(keyvalue instanceof JSONObject) && !(keyvalue instanceof JSONArray))
+			{
+				try
+				{
+					if(!(keyvalue==null))
+					{
+						System.out.println(keyvalue.toString().contains("\n"));
+						if(keyvalue.toString().contains("\n"))
+						{
+							keyvalue=keyvalue.toString().replaceAll("\\n",",");
+						}
+					}
+					fw.write(keyStr + " : " + keyvalue+"\n");//appends the string to the file
+
+				}
+				catch(IOException ioe)
+				{
+					System.err.println("IOException: " + ioe.getMessage());
+				}
+			}
+
+
+			//for nested objects iteration if required
+			if (keyvalue instanceof JSONObject)
+			{
+
+				printJsonObject((JSONObject)keyvalue);
+			}else if(keyvalue instanceof JSONArray)
+			{
+
+				System.out.print(keyStr +"");
+				printJsonArray((JSONArray)keyvalue);
+			}
+		}
+	}
+}
+
+public static void printJsonArray(JSONArray jsArr) throws IOException
+{
+
+	System.out.println(" count is "+jsArr.size());
+
+	for (int i = 0; i < jsArr.size(); i++) {
+
+
+
+		if(jsArr.get(i)  instanceof JSONObject)
+		{
+			JSONObject objects = (JSONObject) jsArr.get(i);
+			for (Object key : objects.keySet()) {
+
+				if(!(key.equals("config") || key.equals("review_state") || key.equals("volume") || key.equals("status")||key.equals("msg")))
+				{
+
+					//based on you key types
+					String  keyStr = (String)key;
+					Object keyvalue = objects.get(keyStr);
+
+					//Print key and value
+					System.out.println(keyStr + " : " + keyvalue);
+					if (!(keyvalue instanceof JSONObject) && !(keyvalue instanceof JSONArray))
+					{
+						try
+						{
+
+							if(!(keyvalue==null))
+							{
+								if(keyvalue.toString().contains("\n"))
+								{
+									keyvalue=keyvalue.toString().replaceAll("\\n",",");
+								}
+							}
+							fw.write(keyStr + " : " + keyvalue+"\n");
+
+						}
+						catch(IOException ioe)
+						{
+							System.err.println("IOException: " + ioe.getMessage());
+						}
+					}
+
+					/*if (keyStr.equals(k)) {
+						System.out.println("***********************************************"+objects.get(key));
+						break;
+					}*/
+
+					//for nested objects iteration if required
+					if (keyvalue instanceof JSONObject)
+					{
+						printJsonObject((JSONObject)keyvalue);
+					}else if(keyvalue instanceof JSONArray)
+					{
+						System.out.print(keyStr +"");
+						printJsonArray((JSONArray)keyvalue);
+					}
+				}
+			}
+		}else if(jsArr.get(i) instanceof JSONArray)
+		{
+
+			JSONArray objects=(JSONArray) jsArr.get(i);
+			System.out.println("key :" +objects.get(0));
+			try
+			{
+
+				fw.write(objects.get(0)+":"+""+"\n");//appends the string to the file
+
+			}
+			catch(IOException ioe)
+			{
+				System.err.println("IOException: " + ioe.getMessage());
+			}
+			printJsonArray(objects);
+		}
+
+
+	}
+
+}
+
+
+public static MultiHashMap readerInstructor(String filename)
+{
+	MultiHashMap instructors=new MultiHashMap();
+
+	try
+	{
+		BufferedReader in = new BufferedReader( new FileReader(filename));
+
+		String line;
+		String[] values;
+		String key = null;
+		String value=null;
+
+		while(!((line = in.readLine())== null))
+		{
+
+			line = in.readLine();
+			if(line==null)
+			{
+				System.out.println("it is null");
+			}
+			else
+			{
+				values = line.split(":", -1);// To handle null value while splitting
+
+				System.out.println("HashMap################"+values[0] +":"+values[1]);
+
+				key = values[0];
+				value = values[1];
+
+				instructors.put(key, value);
+			}
+		}
+
+	}
+	catch (FileNotFoundException e)
+	{
+		e.printStackTrace();
+	}
+	catch (IOException e)
+	{
+		e.printStackTrace();
+	}
+	return instructors;
+}
+
+public static void jsonReadingWithoutRecursive() throws FileNotFoundException, IOException, ParseException
+{
+
+
+	Object obj = new JSONParser().parse(new FileReader("/home/user/Desktop/test1.json"));
+
+
+	// typecasting obj to JSONObject
+	JSONObject jo = (JSONObject) obj;
+
+
+	JSONObject config = (JSONObject) jo.get("config");
+	System.out.println("config: " + config);
+
+	JSONObject fieldsdata = (JSONObject) config.get("fields_data");
+	System.out.println("fields_data: " + fieldsdata);
+
+	JSONArray columns_fields = (JSONArray) fieldsdata.get("columns");
+	System.out.println("\tcolumns: " + columns_fields);
+
+	Object fieldDataObj = config.get("fields_data");
+	JSONObject fieldDatajsonObject = (JSONObject) fieldDataObj;
+
+	Iterator itr1 = columns_fields.iterator();
+
+	System.out.println(columns_fields.size());
+
+	while (itr1.hasNext()) {
+
+
+		Object columnsObj = itr1.next();
+		JSONObject jsonObject2 = (JSONObject) columnsObj;
+
+
+		String key = (String) jsonObject2.get("key");
+
+		String value = (String) jsonObject2.get("value");
+		String type = (String) jsonObject2.get("type");
+
+		System.out.println("\t\ttype: " + type);
+		System.out.println("\t\tkey: " + key);
+		System.out.println("\t\tvalue: " + value);
+
+	}
+
+	JSONObject recorddata = (JSONObject) config.get("record_data");
+	System.out.println("recorddata: " + recorddata);
+
+	JSONArray columns_records = (JSONArray) recorddata.get("columns");
+	System.out.println("\tcolumns: " + columns_records);
+
+	Object recordDataObj = config.get("record_data");
+	JSONObject jsonObject1 = (JSONObject) recordDataObj;
+
+
+
+	Iterator itr2 = columns_records.iterator();
+
+	while (itr2.hasNext()) {
+
+
+		Object columnsObj = itr2.next();
+		JSONObject jsonObject2 = (JSONObject) columnsObj;
+
+
+		String key = (String) jsonObject2.get("key");
+		String value = (String) jsonObject2.get("value");
+
+		System.out.println("\t\tkey: " + key);
+		System.out.println("\t\tvalue: " + value);
+
+	}
+
+	JSONObject data = (JSONObject) jo.get("data");
+	System.out.println("data: " + data);
+
+	JSONArray sections = (JSONArray) data.get("sections");
+	System.out.println("\tsections: " + sections );
+
+	Iterator itr3 = sections.iterator();
+
+	while (itr3.hasNext()) {
+
+
+		Object sectionObj = itr3.next();
+		JSONObject jsonObject2 = (JSONObject) sectionObj;
+
+
+		String temp_id = (String) jsonObject2.get("temp_id");
+		String type = (String) jsonObject2.get("type");
+		String section_id = (String) jsonObject2.get("section_id");
+		String name = (String) jsonObject2.get("name");
+
+
+		System.out.println("\t\ttemp_id: " + temp_id);
+
+		System.out.println("\t\ttype: " + type);
+		System.out.println("\t\tsection_id: " + section_id);
+		System.out.println("\t\tname: " + name);
+
+		JSONArray elements = (JSONArray) jsonObject2.get("elements");
+		System.out.println("\telements: " + elements );
+
+		Iterator itr4 = elements.iterator();
+
+		while (itr4.hasNext()) {
+
+
+			Object elementsObj = itr4.next();
+			JSONObject jsonObject3 = (JSONObject) elementsObj;
+
+
+			Boolean need_review = (Boolean) jsonObject3.get("need_review");
+			Long score = (Long) jsonObject3.get("score");
+			System.out.println("\t\tneed_review: " + need_review);
+			System.out.println("\t\tscore: " + score);
+
+		}
+
+	}
+}
+
+public static void checkIfJsonIsArrayOrObject(Object obj)
+{
+	if (obj instanceof Map){
+		JSONObject jsonObject = new JSONObject();
+		System.out.println("Object");
+	}
+	else if (obj instanceof List){
+		JSONArray jsonArray = new JSONArray();
+		System.out.println("Array");
+
+	}
+}
+
+public static Object find(JSONObject jObj, String k) throws JSONException {
+	Iterator<?> keys = (Iterator<?>) jObj.keySet();
+
+	while( keys.hasNext() ) {
+		String key = (String)keys.next();
+		if (key.equals(k)) {
+			System.out.println(jObj.get(key));
+			return jObj.get(key);
+		}
+
+		if ( jObj.get(key) instanceof JSONObject ) {
+			System.out.println(jObj.get(key));
+			return find((JSONObject)jObj.get(key), k);
+		}
+
+		if ( jObj.get(key) instanceof JSONArray ) {
+			JSONArray jar = (JSONArray)jObj.get(key);
+			for (int i = 0; i < jar.size(); i++) {
+				JSONObject j = (JSONObject) jar.get(i);
+				find(j, k);
+			}
+		}
+	}
+	return keys;
+}
+}
+
+
+
+
+
+
+
