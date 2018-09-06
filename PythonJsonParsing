@@ -1,0 +1,163 @@
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# create a file handler
+handler = logging.FileHandler('hello.log',mode='w')
+handler.setLevel(logging.INFO)
+
+# create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# add the handlers to the logger
+logger.addHandler(handler)
+
+
+def comparingLists(goldenDataList,ExtractedUIDataList):
+    count=0;
+    for each in goldenDataList:
+        if each in ExtractedUIDataList:
+            logger.info("Found in UI data set : " +str(each))
+            count=count+1
+        else:
+            logger.info("Not Found in UI data set : " +str(each))
+    benchMarking=((float(count)/(len(goldenDataList)))*100)
+    return benchMarking
+
+def entitesExtraction(UIEntitesFile,GoldenDataEntitiesFile):
+    UIDataSetJson = json.loads(open(UIEntitesFile).read())
+    GoldenDataSetJson = json.loads(open(GoldenDataEntitiesFile).read())
+
+
+    UIEntitiesDataSet = []
+    GoldenDataEntitiesDataSet = []
+
+
+    for i in UIDataSetJson["result"]["metadata"]["entity"]:
+        for j in i["data"]:
+            for k in i["data"][j]:
+                for h in k["data"]:
+                    for g in k["data"][h]:
+                        for y in g["data"]:
+                            for l in g["data"][y]:
+                                UIEntitiesDataSet.append([h.strip(),y.strip(),l[0].strip()])
+
+
+    for i1 in GoldenDataSetJson:
+        for j1 in i1["data"]:
+            for k1 in i1["data"][j1]:
+                for h1 in k1["data"]:
+                    for g1 in k1["data"][h1]:
+                        for y1 in g1["data"]:
+                            for l1 in g1["data"][y1]:
+                                if(type(l1) is list):
+                                 GoldenDataEntitiesDataSet.append([h1.strip(), y1.strip(), l1[0].strip()])
+                                else:
+                                 GoldenDataEntitiesDataSet.append([h1.strip(), y1.strip(), l1.strip()])
+                                 break;
+
+
+    return UIEntitiesDataSet, GoldenDataEntitiesDataSet
+    # print(config["result"]["metadata"]["entity"][0]["data"]["resume"][0]["data"])
+    #
+    # root=config["result"]["metadata"]["entity"][0]["data"]["resume"][0]["data"]
+    #
+    # print(root.keys())
+    #
+    # keys=root.keys()
+    #
+    # for i in keys:
+    #     print("List index: ", root[i][0]["data"])
+    #     t6 = root[i][0]["data"]
+    #     t7 = root[i][0]["data"].keys()
+    #     print(t7)
+    #     for i1 in t7:
+    #         tempList1.append([i1, t6[i1][0]])
+    #     print("TempList1 is :", tempList1)
+    #
+    #
+    #
+    #
+    # print(config1)
+    # print(config1[0]["data"]["resume"][0]["data"])
+    # root1 = config1[0]["data"]["resume"][0]["data"]
+    # print(root1.keys())
+    #
+    # keys1 = root1.keys()
+    #
+    # for i1 in keys1:
+    #     print("List index: ", root1[i1][0]["data"])
+    #     t2=root1[i1][0]["data"]
+    #     t1=root1[i1][0]["data"].keys()
+    #     print(t1)
+    #     for i in t1:
+    #         tempList.append([i,t2[i][0]])
+    #     print("TempList is :",tempList)
+
+
+def elementsExtraction(UIElementsFile,GoldenElementsFile):
+    UIElementJson = json.loads(open(UIElementsFile).read())
+    GoldenDataSetJson = json.loads(open(GoldenElementsFile).read())
+
+    # declaring list
+    headingGoldenDataSet = list();
+    paragraphGoldenDataSet = list();
+    headingUIDataSet = list();
+    paragraphUIDataSet = list();
+
+    for i in UIElementJson["data"]["sections"]:
+        for j in i["elements"]:
+            if j["type"] == "heading":
+                headingUIDataSet.append(["heading",j["text"].strip()])
+            elif j["type"] == "paragraph":
+                paragraphUIDataSet.append(["paragraph",j["text"].strip()])
+
+    for j in GoldenDataSetJson["all_elements"]:
+        if j["type"] == "heading":
+            headingGoldenDataSet.append(["heading",j["text"].strip()])
+        elif j["type"] == "paragraph":
+            paragraphGoldenDataSet.append(["paragraph",j["text"].strip()])
+
+
+    return headingGoldenDataSet,paragraphGoldenDataSet,headingUIDataSet,paragraphUIDataSet
+
+
+
+UIEntitiesDataSet,GoldenDataEntitiesDataSet=entitesExtraction("/home/user/Desktop/UIEntitiesJson.json","/home/user/Desktop/entities.json")
+
+logger.info("Extraction entities from UI data set :"+str(UIEntitiesDataSet))
+logger.info("Extraction entities from UI data set :"+str(GoldenDataEntitiesDataSet))
+
+benchMarkValueEntities=comparingLists(UIEntitiesDataSet,GoldenDataEntitiesDataSet)
+
+logger.info("BenchMarking value for entities : "+ str(benchMarkValueEntities))
+
+headingGoldenDataSet,paragraphGoldenDataSet,headingUIDataSet,paragraphUIDataSet=elementsExtraction("/home/user/Desktop/UIElementsJson.json","/home/user/Desktop/elements_test.json")
+
+logger.info("Extraction elements of headings from UI data set :"+str(headingGoldenDataSet))
+logger.info("Extraction elements of paragraphs from UI data set :"+str(paragraphGoldenDataSet))
+logger.info("Extraction elements of headings from Golden data set :"+str(headingGoldenDataSet))
+logger.info("Extraction elements of paragraphs from Golden data set :"+str(paragraphGoldenDataSet))
+
+
+logger.info("Count of heading in golden data :"+str(len(headingGoldenDataSet)))
+logger.info("Heading of golden data set:" +str(headingGoldenDataSet))
+logger.info("Count of heading in UI data :" +str(len(headingUIDataSet)))
+logger.info("Heading of UI data set:"+str(headingUIDataSet))
+logger.info("Count of paragraph in golden data :" +str(len(paragraphGoldenDataSet)))
+logger.info("paragraph of golden data set :"+str(paragraphGoldenDataSet))
+logger.info("Count of paragraph in UI data :" +str(len(paragraphUIDataSet)))
+logger.info("paragraph of UI data set :"+str(paragraphUIDataSet))
+
+benchMarkValueElementHeading=comparingLists(headingGoldenDataSet,headingUIDataSet)
+
+logger.info("BenchMarking value for element headings : "+ str(benchMarkValueElementHeading))
+
+
+benchMarkValueElementparagraph=comparingLists(paragraphGoldenDataSet,paragraphUIDataSet)
+
+logger.info("BenchMarking value for element paragraph : "+ str(benchMarkValueElementparagraph))
+
